@@ -1,0 +1,32 @@
+{
+  "index.qmd": {
+    "index.html": "4d0838bf"
+  },
+  "about.qmd": {
+    "about.html": "5b0e1a59"
+  },
+  "Skills.qmd": {
+    "Skills.html": "06206e85"
+  },
+  "Projects.qmd": {
+    "Projects.html": "fc00b9ff"
+  },
+  "midproject.qmd": {
+    "midproject.html": "a673a634"
+  },
+  "mid.rmd": {
+    "mid.html": "001bc696"
+  },
+  "code.qmd": {
+    "code.html": "51216729"
+  },
+  "dataset.qmd": {
+    "dataset.html": "f8585637"
+  },
+  "final project code.qmd": {
+    "final project code.html": "07c90990"
+  },
+  "research3.qmd": {
+    "research3.html": "1d794cda"
+  }
+}

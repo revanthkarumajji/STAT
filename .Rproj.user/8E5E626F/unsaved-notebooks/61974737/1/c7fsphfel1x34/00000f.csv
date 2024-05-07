@@ -1,0 +1,6 @@
+"0","# Check and handle missing values"
+"0","data <- na.omit(data)"
+"0",""
+"0","# Normalize numeric inputs"
+"0","preProcValues <- preProcess(data[, sapply(data, is.numeric)], method = c(""center"", ""scale""))"
+"0","data[, sapply(data, is.numeric)] <- predict(preProcValues, data[, sapply(data, is.numeric)])"

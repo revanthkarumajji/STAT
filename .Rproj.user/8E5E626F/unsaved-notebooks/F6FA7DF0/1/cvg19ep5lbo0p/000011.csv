@@ -1,0 +1,7 @@
+"0","# Install and load pdp package for partial dependence plots"
+"0","if (!requireNamespace(""pdp"", quietly = TRUE)) install.packages(""pdp"")"
+"0","library(pdp)"
+"0",""
+"0","# Partial dependence plot for the most important variable"
+"0","pdp_result <- partial(rf_model, pred.var = ""Corn.Yield..ton.acre."")"
+"0","plot(pdp_result, main = ""Partial Dependence Plot for Corn Yield"")"

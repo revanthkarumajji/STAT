@@ -1,0 +1,4 @@
+"0",""
+"0","# Boxplot to see distribution of Soil Slope by Rotation"
+"0","ggplot(data, aes(x = as.factor(Rotation), y = Soil.Slope)) + geom_boxplot() + labs(title = ""Soil Slope by Rotation Period"")"
+"0",""

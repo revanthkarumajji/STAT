@@ -1,0 +1,29 @@
+"0","# Load necessary libraries"
+"0","# Load necessary libraries"
+"0","library(readr)"
+"0","library(dplyr)"
+"0","library(caret)"
+"0","library(glmnet)"
+"0",""
+"0","# Load the dataset"
+"0","data <- read_csv(""C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv"")"
+"2","[1mRows: [22m[34m8513[39m [1mColumns: [22m[34m24[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (16): County, County_MAPSYM, MAPSYM, Multiple MSG Flag, Flag - Fields, C...
+[32mdbl[39m  (8): MUKEY, Default Mineral Soil Group, Flag - MSG Values, Rotation, Co..."
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","# Convert 'Drainage' to factor"
+"0","data$Drainage <- factor(data$Drainage)"
+"0",""
+"0",""
+"0","# Checking for missing values and imputing or removing them"
+"0","data <- na.omit(data)  # Removes all rows with NA values"
+"0",""
+"0","# Encode categorical variables using one-hot encoding"
+"0","data_processed <- model.matrix(~ . - 1, data = data)"
+"2","Error in `contrasts<-`(`*tmp*`, value = contr.funs[1 + isOF[nn]]) : 
+  contrasts can be applied only to factors with 2 or more levels
+"

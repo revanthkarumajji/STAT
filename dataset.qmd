@@ -1,0 +1,15 @@
+---
+title: "Dataset"
+---
+
+This dataset provided by the New York State Energy Research and Development Authority (NYSERDA) serves participants of NYSERDA’s Large-Scale Renewable and NY-Sun programs. It contains soils data compiled from various sources, including the New York State Agricultural Land Classification master list maintained by the New York State Department of Agriculture and Markets (AGM), and the Natural Resources Conservation Service (NRCS) SSURGO soils database.
+
+**Purpose:** The dataset is intended to aid developers participating in NYSERDA’s Renewable Energy Standard (RES) Request for Proposals (RFP) or the NY-Sun program. It facilitates the protection of agricultural lands by identifying highly productive agricultural soils (Mineral Soil Groups MSG 1-4) and discouraging solar projects from siting on them.
+
+**Mitigation Approach:** Developers may be required to make agricultural mitigation payments based on the extent of overlap between their solar project’s facility area and MSG 1-4 soils. These payments contribute to a fund administered by NYSERDA, supporting agricultural practices and soil conservation initiatives.
+
+**Data Sources:** The dataset combines soils data from multiple sources, including the AGM’s master list of agricultural soils and the NRCS SSURGO soils database. The unique identifiers provided enable users to link the soils to the SSURGO database for geographical representation.
+
+**Data Updates:** While the data is updated yearly from both NRCS and AGM, NYSERDA does not update the dataset itself. It remains intact for future reference. NYSERDA intends to create new soils datasets for future procurements on an annual basis.
+
+**NYSERDA’s Role:** NYSERDA offers objective information, analysis, innovative programs, technical expertise, and support to help New Yorkers increase energy efficiency, use renewable energy, and reduce reliance on fossil fuels.

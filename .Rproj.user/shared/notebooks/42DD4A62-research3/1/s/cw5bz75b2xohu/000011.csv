@@ -1,0 +1,37 @@
+"0","toggleCode <- function(chunkID) {"
+"0","  cat(paste0('<script>',"
+"0","              'var x = document.getElementById(""', chunkID, '"");"
+"0","               if (x.style.display === ""none"") {"
+"0","                   x.style.display = ""block"";"
+"0","               } else {"
+"0","                   x.style.display = ""none"";"
+"0","               }"
+"0","              </script>'))"
+"0","# Load necessary libraries"
+"0","library(readr)  # For reading CSV files"
+"0","library(dplyr)  # For data manipulation"
+"0","library(ggplot2)  # For creating visualizations"
+"0",""
+"0","# dataset"
+"0","data = read_csv(""C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv"")"
+"0","# Check all column names in the dataset"
+"0","colnames(data)"
+"2","Error: Incomplete expression: toggleCode <- function(chunkID) {
+  cat(paste0('<script>',
+              'var x = document.getElementById(""', chunkID, '"");
+               if (x.style.display === ""none"") {
+                   x.style.display = ""block"";
+               } else {
+                   x.style.display = ""none"";
+               }
+              </script>'))
+# Load necessary libraries
+library(readr)  # For reading CSV files
+library(dplyr)  # For data manipulation
+library(ggplot2)  # For creating visualizations
+
+# dataset
+data = read_csv(""C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv"")
+# Check all column names in the dataset
+colnames(data)
+"

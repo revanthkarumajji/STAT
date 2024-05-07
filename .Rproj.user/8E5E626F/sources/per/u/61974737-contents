@@ -1,0 +1,98 @@
+---
+title: "jjj"
+author: "Revanth Karumajji"
+date: "2024-05-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+# Load required libraries
+library(dplyr)  # for data manipulation
+library(caret)   # for train-test split
+library(glmnet) # for Lasso and Ridge regression
+library(randomForest) # for Random Forest
+
+# Load your data (replace 'your_data.csv' with your actual file path)
+data <- read.csv("C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+
+# Check for missing values
+summary(data)
+# Suppose 'data' is your data frame and 'column_name' is the name of the column
+unique_values <- unique(data$Texture)
+
+# Print unique values
+print(unique_values)
+```
+
+```{r}
+# Suppose 'data' is your data frame and 'Texture' is the name of the column
+# Define the conditions for grouping
+data <- data %>%
+  mutate(Texture_Group = case_when(
+    Texture %in% c("Silty Loam", "Silty Clay Loam", "Silty Loam, Non-Calcareous") ~ "STILLY",
+    Texture %in% c("Muck", "Peat", "Muck/Peat") ~ "MUCK",
+    Texture %in% c("Loamy Fine Sand", "Fine Sandy Loam", "Very Fine Sandy Loam", "Loamy Sand", "Fine Sand", "Loamy Very Fine Sand") ~ "SANDY",
+    Texture %in% c("Clay", "Silty Clay", "Clay Loam") ~ "CLAY",
+    Texture %in% c("Sandy Loam", "Sandy Clay Loam") ~ "LOAM",
+    Texture == "Flaggery" ~ "FLAGGERY",
+    TRUE ~ "OTHER"  # For any other values not specified
+  ))
+
+# View the updated data frame with the new Texture_Group column
+print(data$Texture_Group)
+
+```
+
+```{r}
+# Check and handle missing values
+data <- na.omit(data)
+
+# Normalize numeric inputs
+preProcValues <- preProcess(data[, sapply(data, is.numeric)], method = c("center", "scale"))
+data[, sapply(data, is.numeric)] <- predict(preProcValues, data[, sapply(data, is.numeric)])
+```
+
+
+```{r}
+# Setting up training control
+train_control <- trainControl(method = "cv", number = 10)
+sapply(data, function(x) if(is.factor(x)) length(levels(x)) else NA)
+
+
+
+# Random Forest Regression
+rf_model <- randomForest(Corn.Yield..ton.acre. ~ ., data = data, ntree = 500)
+
+# Print model summaries
+print(rf_model)
+```
+
+```{r}
+# Assuming you have a dataset named 'data' with 'Texture_Group' as one of the variables
+
+# Check the structure of your dataset
+str(data)
+
+# Perform ANOVA for a specific variable (e.g., 'Variable_of_Interest') across 'Texture_Group'
+# Assuming you have a dataset named 'data' with 'Texture_Group' as one of the variables
+
+# Check the structure of your dataset
+str(data)
+
+# Perform ANOVA for all continuous variables across 'Texture_Group'
+anova_results <- lapply(data[, sapply(data, is.numeric)], function(var) {
+  aov_result <- aov(var ~ Texture_Group, data = data)
+  return(summary(aov_result))
+})
+
+# Print ANOVA results
+names(anova_results) <- names(data)[sapply(data, is.numeric)]
+anova_results
+
+# Summary of ANOVA results
+
+```
+

@@ -1,0 +1,4 @@
+"0","# Sort and plot the importance"
+"0","var_importance <- importance(rf_model)"
+"0","var_importance <- var_importance[order(var_importance[, ""IncNodePurity""], decreasing = TRUE),]"
+"0","barplot(var_importance[, ""IncNodePurity""], main = ""Variable Importance in Random Forest Model"", las = 2)"

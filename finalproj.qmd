@@ -1,0 +1,593 @@
+---
+title: "Final Project"
+format: html
+editor: visual
+---
+
+# Introduction 
+
+In the landscape of renewable energy and environmental conservation, precise and accurate data are paramount. The New York State Energy Research and Development Authority (NYSERDA) presents the 2023 Soils Data, a vital resource tailored for stakeholders in the Large-Scale Renewables and NY-Sun Programs. Released on January 12, 2024, this dataset supports the Renewable Energy Standard (RES) Request for Proposal (RFP) processes, providing essential data to inform site selection and development while prioritizing the conservation of high-quality agricultural soils in New York State.
+
+**Dataset Overview:**
+
+The NYSERDA 2023 Soils Data integrates multiple sources to provide a comprehensive tabular representation of soil types across New York. The dataset transforms the New York State Agricultural Land Classification's master list into an accessible format, aligning each soil type with a unique identifier. This identifier links directly to the Natural Resources Conservation Service (NRCS) SSURGO database, facilitating geographic mapping and analysis in GIS software. It's crucial to utilize the latest SSURGO database update for accurate spatial joining.
+
+**Detailed Column Descriptions**
+
+1.  *County*: This column lists the name of the county in which the soil unit is located. It helps users identify and segregate data geographically within New York State.
+
+2.  *County_MAPSYM*: A combination of the county name and the MAPSYM abbreviation, providing a unique identifier for each soil unit. This facilitates easier cross-referencing within the dataset and ensures distinct entries for each soil type.
+
+3.  *MAPSYM*: Contains the abbreviation for the soil unit name. This abbreviated form helps in quick referencing and mapping in GIS systems.
+
+4.  *MUKEY*: Stands for "Map Unit Key," a unique identifier for each soil unit used to join this dataset to the NRCS SSURGO database. Blank cells indicate map symbols no longer present in the SSURGO database, which highlights updates or changes in soil classification.
+
+5.  *Default Mineral Soil Group*: Indicates the Mineral Soil Group (MSG) classification for each soil unit, specifically for NYSERDA’s program use. MSG values range from 1 to 10, with lower numbers indicating higher quality agricultural soils. This classification aids in assessing the agricultural value and potential environmental impact of developing a particular area.
+
+6.  *Multiple MSG Flag*: Indicates if there are multiple MSG values for a soil unit. This is critical for understanding the variability within a single mapped unit and planning for site-specific mitigation strategies.
+
+7.  *Flag - MSG Values*: Lists all possible MSG values for a given soil unit where multiple classifications exist, providing a comprehensive view of the soil's characteristics.
+
+8.  *Flag - Fields*: Identifies fields within the dataset that contain differing data across subsets of soil types, which is important for data integrity checks and understanding dataset complexity.
+
+9.  *Capability Class (FM5 CAP)*: Represents the land capability classification, which categorizes land based on its highest sustainable use and risk of damage if used for agriculture. This helps in evaluating the suitability of land for agricultural versus developmental purposes.
+
+10. *Soil Temp. Regime*: Describes the soil temperature regime as defined in the Soil Taxonomy, which influences what types of vegetation the soil can support naturally.
+
+11. *Soil Modifier*: Describes any element of the soil unit that might be used for altering the soil group value, providing insights into how soil characteristics might be adjusted or reported differently in agricultural assessments.
+
+12. *Soil Slope*: Indicates the range of slope percentage for the soil unit, which is crucial for determining erosion risk and suitability for various types of land use.
+
+13. *Soil Name*: Provides the standard name of the soil unit, which can be cross-referenced with other agricultural or ecological databases.
+
+14. *Drainage*: Identifies the natural drainage condition of the soil, crucial for understanding water management needs and potential flooding risks.
+
+15. *Modifier*: Similar to "Soil Modifier", it describes elements that could alter the classification or characteristics of the soil unit.
+
+16. *Texture*: Describes the general texture of the soil's parent material, impacting its permeability, fertility, and suitability for different types of crops.
+
+17. *Flooding*: Notes whether there's a risk of flooding from nearby water bodies, which can affect crop selection and land use planning.
+
+18. *Lime*: Indicates if lime application is recommended for the soil unit to correct pH levels, which is vital for optimizing crop health and yield.
+
+19. *Rotation*: Specifies the number of years certain crops (like corn) can be grown in rotation without exceeding permissible soil loss rates, guiding sustainable agricultural practices.
+
+20. *Corn Yield (ton/acre)*: Lists average management yields of corn per acre, useful for economic planning and agricultural forecasting.
+
+21. *Hay Yield (ton/acre)*: Provides the average management yields of hay per acre, aiding in the assessment of the soil's productivity for hay cultivation.
+
+22. *Change*: Documents any changes in the information for this soil map unit, which could influence soil classification or usage recommendations.
+
+23. *TDN (ton/acre)*: Stands for Total Digestible Nutrients, calculating nutritional value based on crop yields, crucial for assessing soil fertility and potential agricultural productivity.
+
+24. *Index (TDN)*: Represents an index value of Total Digestible Nutrients, providing a comparative measure of the soil's productivity potential against the best soil in the dataset.
+
+## Exploratory Data analysis of a Dataset:
+
+Loading the dataset and structure and summary of data
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+library(readr)
+library(rpart)
+library(rpart.plot)
+
+# Load the dataset
+data <- read_csv("C:\\Users\\Dell\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+
+# Check the structure and summary of data
+str(data)
+
+```
+
+# Research Question 1. Which New York State counties are best suited for solar projects based on low agricultural yields of corn and hay and How do soil characteristics influence agricultural productivity in these counties, and what implications does this have for solar energy project siting?
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE),
+            Avg_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE))
+
+# View the resulting data frame
+print(county_avg_yield)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(ggplot2)
+library(plotly)
+library(dplyr)
+
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE))
+
+# Create a ggplot object for average corn yields by county
+p_corn <- ggplot(data = county_avg_yield, aes(x = reorder(County, -Avg_Corn_Yield), y = Avg_Corn_Yield, fill = Avg_Corn_Yield)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  # Remove legend
+  scale_fill_gradient(low = "yellow", high = "darkorange") +  # Use a gradient fill from yellow to dark orange
+  labs(title = "Average Corn Yield by County", x = "County", y = "Average Yield (ton/acre)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8),  # Rotate x-axis labels for better fit
+        axis.title = element_text(size = 12, face = "bold"))  # Bold and larger axis titles
+
+# Convert the ggplot object to a Plotly object
+plotly_corn <- ggplotly(p_corn)
+
+# Optionally, customize further with layout options in Plotly
+plotly_corn <- layout(plotly_corn,
+                   xaxis = list(title = "County"),
+                   yaxis = list(title = "Average Yield (ton/acre)"),
+                   title = "Average Corn Yield by County")
+
+# Print or render the plot
+plotly_corn
+```
+
+**Average Corn Yield by County (First Graph):**
+
+This bar graph represents the average corn yield for various counties, arranged in descending order. Each bar reflects the yield of corn in tons per acre for a specific county.
+
+**Key Observations:**
+
+**Yield Variability:** There is a significant variability in corn yields among counties. The graph shows a stark contrast between the highest-yielding counties and those at the lower end. Counties with yields over 10 tons per acre contrast sharply with those that barely produce 1 ton per acre.
+
+**Geographical Clustering:** The highest-yielding counties are grouped on the left side of the graph. This clustering might suggest geographical or climatic advantages, or it could reflect areas with more advanced farming techniques and better soil management practices.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE))
+
+# Create a ggplot object for average hay yields by county
+p_hay <- ggplot(data = county_avg_yield, aes(x = reorder(County, -Avg_Hay_Yield), y = Avg_Hay_Yield, fill = Avg_Hay_Yield)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  # Remove legend
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +  # Use a gradient fill from light green to dark green
+  labs(title = "Average Hay Yield by County", x = "County", y = "Average Yield (ton/acre)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8),  # Rotate x-axis labels for better fit
+        axis.title = element_text(size = 12, face = "bold"))  # Bold and larger axis titles
+
+# Convert the ggplot object to a Plotly object
+plotly_hay <- ggplotly(p_hay)
+
+# Optionally, customize further with layout options in Plotly
+plotly_hay <- layout(plotly_hay,
+                   xaxis = list(title = "County"),
+                   yaxis = list(title = "Average Yield (ton/acre)"),
+                   title = "Average Hay Yield by County")
+
+# Print or render the plot
+plotly_hay
+
+```
+
+**Average Hay Yield by County (Second Graph):**
+
+Similar to the first, this graph displays the average hay yield in tons per acre across different counties, arranged in descending order.
+
+**Key Observations:**
+
+**More Uniform Yields:** Compared to corn, hay yields across counties show a more uniform distribution. The highest yields are not as extreme, and the decrease across counties appears more gradual.
+
+**Lower Maximum Yields:** The highest hay yields are significantly lower than the highest corn yields, which might reflect different market values, crop demands, or inherent differences in how these crops are cultivated and harvested.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+# Calculate average yields for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarise(
+    Average_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE),
+    Average_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE),
+    Total_Yield = Average_Corn_Yield + Average_Hay_Yield
+  ) %>%
+  arrange(Total_Yield)  # Arrange by total average yield in ascending order
+
+# Create hover text
+county_avg_yield <- county_avg_yield %>%
+  mutate(Hover_Info = sprintf("County: %s\nCorn Yield: %.2f ton/acre\nHay Yield: %.2f ton/acre\nTotal Yield: %.2f ton/acre",
+                              County, Average_Corn_Yield, Average_Hay_Yield, Total_Yield))
+
+# Create the ggplot object with hover info
+p_stacked <- ggplot(data = county_avg_yield, aes(x = reorder(County, Total_Yield), text = Hover_Info)) +
+  geom_bar(aes(y = Average_Corn_Yield), stat = "identity", fill = "orange") +
+  geom_bar(aes(y = -Average_Hay_Yield), stat = "identity", fill = "lightgreen") +
+  labs(title = "Stacked Average Yields by County",
+       x = "County", y = "Average Yield (ton/acre)", fill = "Crop Type") +
+  scale_y_continuous(labels = abs) +
+  scale_fill_manual(values = c("orange", "lightgreen"), labels = c("Corn", "Hay")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+
+# Convert to Plotly and add custom hover info
+plotly_stacked <- ggplotly(p_stacked, tooltip = "text")
+
+plotly_stacked <- layout(plotly_stacked,
+                         xaxis = list(title = "County"),
+                         yaxis = list(title = "Yield (ton/acre)"),
+                         title = "Interactive: Stacked Average Yields by County")
+plotly_stacked
+
+
+```
+
+**Interactive: Stacked Average Yields by County (Third Graph):**
+
+This stacked bar chart combines the data from the first two graphs, showing both corn and hay yields stacked for each county. This format allows for direct comparison of the two types of yields within the same county.
+
+**Interpretation:**
+
+**Combined Yields:** Each county's bar is split into two sections: the lower (green) represents hay yield, and the upper (orange) represents corn yield. This helps in visualizing the proportion of each crop's yield relative to the total agricultural output per acre.
+
+**Proportional Comparison:** The stacked bars provide a clear visual comparison of how much each crop contributes to the total agricultural output per county. Some counties have a balanced output of corn and hay, while others are heavily skewed towards one crop.
+
+**Interactive Utility:** The presumed interactivity of this graph allows users to explore specific data points, enhancing understanding of regional agricultural dynamics.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load the necessary library
+library(dplyr)
+
+# Assuming 'data' is already loaded into your R environment
+# Filter data for Hamilton County
+hamilton_data <- data %>%
+  filter(County == "Hamilton")
+
+# View the first few rows of the Hamilton data to confirm filtering
+head(hamilton_data)
+
+# You might also want to check the structure of the filtered data
+str(hamilton_data)
+
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+
+# Convert categorical variables to numeric
+data$Soil_Temp_Regime <- as.numeric(as.factor(data$`Soil Temp. Regime`))
+data$Texture <- as.numeric(as.factor(data$Texture))
+
+# Calculate the correlation matrix for soil characteristics and yields
+correlation_analysis <- data %>%
+  select(`Corn Yield (ton/acre)`, `Hay Yield (ton/acre)`, `Default Mineral Soil Group`, Soil_Temp_Regime, Texture, `TDN (ton/acre)`, `Index (TDN)`) %>%
+  cor(use = "complete.obs")  # Handling missing data by using complete cases
+
+# Print the correlation matrix
+print(correlation_analysis)
+
+```
+
+The correlation matrix you've obtained provides valuable insights into the relationships between different soil characteristics and agricultural yields. Here's a summary of key findings and their implications:
+
+Key Findings from the Correlation Matrix: Corn Yield and Hay Yield: Strong Positive Correlation (0.92): This suggests that areas with high corn yields also tend to have high hay yields. This is expected as both are likely influenced similarly by soil quality and farming practices. Corn Yield, Hay Yield, and Default Mineral Soil Group: Strong Negative Correlation with Mineral Soil Group (Corn: -0.83, Hay: -0.92): Lower numbers in the Default Mineral Soil Group (indicating higher quality soils) are associated with higher yields. This strongly suggests that soil quality significantly impacts agricultural productivity. Soil Temperature Regime: Moderate Positive Correlation with Yields (Corn: 0.24, Hay: 0.28): Suggests that regions with higher soil temperature regimes may slightly favor higher yields. This could be due to the influence of temperature on plant growth rates and seasonal growing periods. Texture: Low Correlation with Yields (Corn: 0.08, Hay: 0.10): Indicates that the texture of the soil has a minimal direct impact on yields compared to other factors. TDN (Total Digestible Nutrients) and Index (TDN): Very High Correlation with Yields (TDN with Corn: 0.91, Hay: 0.97): This shows a strong relationship between the nutritional value of the soil and crop yields, underlining the importance of soil fertility in agricultural productivity. Almost Perfect Correlation Between TDN and Index (TDN): (\~1.0): Demonstrates that these two metrics are almost interchangeable in terms of what they indicate about soil fertility. Implications for Solar Project Siting: Soil Quality (Default Mineral Soil Group): Areas with lower quality soil (higher numbers in the Default Mineral Soil Group) may be more suitable for solar projects as they have lower agricultural productivity, reducing the opportunity cost of converting agricultural land to solar energy production. Soil Temperature Regime: While it has some correlation with yield, its moderate level suggests that it should not be the sole factor in deciding solar project locations. However, it could be a secondary consideration, especially in terms of the environmental impact on the local ecosystem. Nutrient Content (TDN): High nutrient content correlates with high agricultural yields. Solar projects might be more suitable in areas with lower TDN values to minimize the impact on high-yield agricultural land.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(plotly)
+library(reshape2)
+
+# Assuming 'correlation_analysis' is your correlation matrix from earlier
+cor_data <- as.data.frame(correlation_analysis)
+cor_data$Variable <- rownames(cor_data)  # Add a new column for the row names
+
+# Convert the wide format data frame to a long format
+cor_long <- melt(cor_data, id.vars = 'Variable')
+
+# Create the heatmap with Plotly
+p <- plot_ly(data = cor_long, x = ~variable, y = ~Variable, z = ~value, type = 'heatmap', colors = colorRamp(c("red", "yellow", "green")),
+             hoverinfo = 'text',
+             text = ~paste('Correlation: ', round(value, 2)),
+             colorbar = list(title = 'Correlation Coefficient')) %>%
+  layout(title = 'Correlation Matrix Heatmap',
+         xaxis = list(title = 'Variable', tickangle = 90, side = 'top'),  # Correctly set the tick angle here
+         yaxis = list(title = 'Variable', ticksuffix = '  '),
+         margin = list(l = 150, b = 150))  # Adjust margins if needed
+
+# Print the plot
+p
+
+
+```
+
+**Findings:**
+
+**Agricultural Yields Analysis:** Strong Positive Correlation: There is a strong positive correlation between corn and hay yields across counties, indicating that counties with high corn yields also tend to have high hay yields. This correlation suggests that areas excelling in one crop likely have favorable conditions for general agriculture.
+
+**Soil Quality Impact on Productivity:** Negative Correlation with High-Quality Soils: Corn and hay yields have a strong negative correlation with the Default Mineral Soil Group numbers. Lower group numbers (indicating higher soil quality) are associated with higher yields. This significant finding underlines that better-quality soils are crucial for higher agricultural productivity.
+
+**Soil Temperature and Texture:** Moderate Influence of Soil Temperature: Soil temperature regimes show a moderate positive correlation with yields, suggesting that slightly warmer soils may enhance crop productivity. Minimal Impact of Soil Texture: The correlation between soil texture and yields is low, indicating that texture has a minimal direct impact on agricultural productivity compared to other soil characteristics.
+
+**Nutritional Content (TDN)**: Strong Relationship with Yields: Total Digestible Nutrients (TDN) and yields (both corn and hay) show a very high correlation, demonstrating that nutrient-rich soils are significantly more productive. The almost perfect correlation between TDN and its index suggests that these measures are effectively interchangeable as indicators of soil fertility.
+
+**Implications for Solar Energy Project Siting:** Targeting Lower Quality Soil Counties: Counties with higher numbers in the Default Mineral Soil Group (indicating lower quality soils) and lower TDN values are identified as prime candidates for solar projects. These areas have lower agricultural productivity, which reduces the opportunity cost of utilizing the land for solar energy production rather than for agriculture.
+
+**Secondary Considerations:** While soil temperature has some effect on yields, it should be considered a secondary factor in deciding on solar project locations due to its moderate impact level. However, it may still be relevant for understanding local microclimatic conditions that could affect solar panel efficiency.
+
+**Conclusion:**
+
+The analysis suggests that solar projects in New York State can be strategically sited in counties with less agriculturally productive soils to minimize conflict with agricultural uses. By focusing on areas with lower quality soils and lower nutrient content, solar energy development can be optimized to utilize less valuable agricultural land, aligning renewable energy goals with sustainable land management practices. This approach supports the dual objectives of increasing renewable energy capacity while preserving high-value agricultural resources.
+
+# Research Question 2 : How does the moderate positive correlation between 'Drainage' and 'Flooding' in the dataset influence our understanding of soil characteristics and their relationship to flooding risk?
+
+The Pearson correlation coefficient between the 'Drainage' and 'Flooding' columns in our dataset is approximately 0.625, indicating a moderate positive correlation. This suggests that as drainage characteristics of the soil increase (presumably indicating better drainage capacity), the occurrence of flooding also increases. This result might seem counter intuitive at first glance; however, it could indicate that areas classified with better drainage are also those where water accumulates quickly, thus making them prone to flooding under certain conditions.
+
+**Interpretation and Next Steps:**
+
+**Statistical Significance:** The p-value is less than 0.05 (actually, it's much smaller than that), indicating that the correlation is statistically significant, and the likelihood that this correlation is due to random chance is very low.
+
+**Practical Significance:** While statistically significant, the strength of the correlation (moderate) suggests that while there is a relationship, other factors also significantly influence the presence of flooding. It's important to consider these factors in any risk assessment or land use planning.
+
+**Further Analysis:** Investigating how other variables interact with 'Drainage' and 'Flooding' could provide deeper insights. For instance, soil texture, slope, and capability class could be influencing how quickly water is absorbed or runs off, affecting flooding.
+
+![](images/clipboard-2132043786.png)
+
+These plots are key to understanding which predictors are most influential in modeling the outcome (in your case, flooding).
+
+**Interpretation of the Variable Importance Plots:**
+
+**%IncMSE:** This plot shows the percentage increase in Mean Squared Error (MSE) of the model when each variable is randomly shuffled. A higher value indicates that the model relies more on that variable for prediction, meaning the variable is more important. According to your graph, 'Drainage' seems to be the most important predictor, followed by 'Capability_Class' and 'Texture'.
+
+**IncNodePurity( Increase in node impurity ) :** This measure is based on the total decrease in node impurities from splitting on the variable, averaged over all trees. Node impurity is typically measured by the RSS (regression) or Gini impurity (classification). In this graph, 'Capability_Class' contributes most to node purity, followed by 'Drainage' and 'Texture'. This suggests that 'Capability_Class' is particularly effective at creating homogeneous nodes, likely due to its role in determining soil usability.
+
+Investigating interaction effects between predictors like 'Drainage' and 'Texture' in the context of their impact on flooding can provide deeper insights into how these variables jointly influence the outcome. In R, you can include interaction terms directly in your model formula to study these effects. Here, we'll look at two approaches: using multiple regression to evaluate the statistical significance of the interaction, and using a Random Forest model to assess the predictive power when interactions are considered.
+
+## R Code for Multiple Regression with Interaction Terms.
+
+We'll modify the linear regression model to include an interaction term between 'Drainage' and 'Texture'. This will allow us to see if the effect of one variable on flooding depends on the level of the other variable.
+
+![](images/clipboard-1946659323.png)
+
+**Interpretation of the Regression Output Coefficients:**
+
+Intercept (-0.349160): This represents the baseline value of flooding when both 'Drainage' and 'Texture' are at their reference levels (typically zero in numerical coding).
+
+Drainage (0.229149): This coefficient indicates that for each unit increase in drainage (without considering the impact of texture), flooding increases by approximately 0.229 units, holding other factors constant.
+
+Texture (0.294757): Similarly, for each unit increase in texture, flooding increases by approximately 0.295 units, holding other factors constant.
+
+Drainage:Texture Interaction (-0.020150): The negative interaction term suggests that the combined effect of 'Drainage' and 'Texture' on flooding is less than the sum of their individual effects. In other words, higher levels of one may slightly mitigate the influence of the other on flooding.
+
+**Statistical Significance:** All predictors, including the interaction term, are highly statistically significant (p \< 0.001), indicating strong evidence against the null hypothesis of no effect.
+
+**Model Fit:**
+
+Residual Standard Error (RSE) (0.6614): This measures the typical size of the residuals, and in your context, it implies that the standard deviation of the residuals is around 0.661 units.
+
+Multiple R-squared (0.5791): Approximately 57.91% of the variability in flooding is explained by the model, which is a decent level of explanatory power for natural science data.
+
+Adjusted R-squared (0.576): Slightly adjusted for the number of predictors, still indicating a good fit.
+
+Residuals: The spread of residuals suggests that while the model fits well for many observations (median close to zero), there are outliers and some predictions that deviate significantly from the actual values, as indicated by the min and max residuals.
+
+Random Forest inherently considers interactions among features, but we can explicitly engineer an interaction feature to see how it influences model performance.
+
+![](images/clipboard-3888396288.png)
+
+**Interpretation of the Random Forest Model Results:**
+
+**Model Performance:**
+
+Mean of squared residuals (0.1969851): This value is considerably lower than the residual standard error from the linear regression model (0.6614), suggesting that the Random Forest model has better predictive accuracy.
+
+\% Var explained (80.86%): A high percentage of variance explained indicates that the Random Forest model is effectively capturing the relationships and variability in the data. It explains more than 80% of the variance in flooding, which is significantly higher than the Multiple R-squared from the linear regression model (57.91%).
+
+Feature Importance:
+
+Drainage: Importance score of 115.0117, suggesting it's a significant predictor of flooding.
+
+Texture: Importance score of 121.6274, slightly more influential than 'Drainage'.
+
+Drainage_Texture_Interaction: With the highest importance score of 131.4226, this engineered feature seems to be the most significant predictor in the model. This underscores the value of including interaction terms explicitly, even in a model like Random Forest that inherently accounts for interactions among features.
+
+**Comparison and Conclusion:**
+
+**Explanatory Power:** The linear regression model provides clear coefficients that describe the relationship between each predictor and the outcome, including how the interaction term modifies these relationships. This is particularly useful for hypothesis testing and understanding the specific effects of changes in predictors.
+
+**Predictive Accuracy:** The Random Forest model outperforms the linear regression in terms of predictive accuracy, explaining a higher percentage of the variance in flooding and producing a lower mean squared residual.
+
+**Feature Importance:** Random Forest offers an advantage in evaluating the importance of features, including interactions, without needing a specific hypothesis about their effects.
+
+1.  Cross-Validation for Linear Regression and Random Forest
+
+    ![](images/clipboard-2856830190.png)
+
+    ![](images/clipboard-3603234270.png)
+
+    The cross-validation results for both the Linear Regression and Random Forest models provide a clear comparison of their performance:
+
+    Linear Regression Model:
+
+    RMSE (Root Mean Squared Error): 0.6608545
+
+    R-squared: 0.5871187
+
+    MAE (Mean Absolute Error): 0.4143339
+
+    These metrics indicate that the linear regression model explains about 58.71% of the variance in the data. The RMSE and MAE values provide a measure of the average error in the predictions.
+
+    Random Forest Model:
+
+    RMSE: 0.4282331
+
+    R-squared: 0.8134469
+
+    MAE: 0.1653817
+
+    Optimal mtry: 2
+
+    The Random Forest model significantly outperforms the Linear Regression in all the metrics. It explains approximately 81.34% of the variance in the data, and both its RMSE and MAE are lower, indicating more accurate predictions.
+
+The diagnostic plots for your linear regression model provide valuable insights into how well the model meets the assumptions necessary for optimal performance. Here's an interpretation of each plot:
+
+![](images/clipboard-2318224925.png)
+
+1.  Residuals vs Fitted: This plot helps check for non-linearity and heteroscedasticity (unequal variance of residuals).
+
+Observations: The residuals do not appear to display any clear pattern, which is good for linearity. However, there is a slight "fanning" effect where the spread of residuals increases with fitted values, suggesting potential heteroscedasticity.
+
+Action: Consider transformations of the dependent variable or use heteroscedasticity-consistent standard errors if this model will be used for inferential purposes.
+
+2\. Normal Q-Q This plot shows if the residuals are normally distributed—a key assumption of linear regression.
+
+Observations: Most points lie on the line, but there are deviations at the tails (both lower and upper ends), indicating slight departures from normality.
+
+Action: This is generally not severe unless very precise estimates are required. For more robustness, consider using non-parametric bootstrapping techniques to estimate standard errors.
+
+3\. Scale-Location (or Spread-Location) This plot checks if residuals are spread equally along the ranges of predictors (homoscedasticity).
+
+Observations: The red line (a loss fit) shows a trend, which suggests that residuals have non-constant variance across the range of fitted values.
+
+Action: This supports the earlier suggestion of possible heteroscedasticity. Transformations or robust regression methods might be needed.
+
+4\. Residuals vs Leverage This plot helps to identify influential cases that might have an unduly large effect on the model estimate.
+
+Observations: Most data points have low leverage, but there are a few points well outside the Cook's distance lines (notably the points labeled 7280 and 4430).
+
+Action: Investigate these points further to determine if they are outliers or influential points due to data entry errors or other reasons. Consider removing or adjusting these points if they are deemed to be errors. Conclusion The diagnostic plots indicate that while the model does not suffer from severe issues, there are indications of potential heteroscedasticity and some influence from outliers or high-leverage points.
+
+## Research Question 3: How does the presence of multiple mineral soil group (Multiple MSG Flag) affect corn and hay yield across different counties?
+
+The aim of this question is to analyze the influence of the Multiple MSG Flag on the yield of corn and hay, and to determine if there are significant differences in yield based on this soil classification.
+
+**Variables:**
+
+**Dependent Variables:** Corn yield and hay yield (measured in tons per acre).
+
+**Independent Variable:** Multiple MSG Flag (indicating presence of multiple mineral soil groups absence).
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary libraries
+library(readr)  # For reading CSV files
+library(dplyr)  # For data manipulation
+library(ggplot2)  # For creating visualizations
+
+# dataset
+data = read_csv("C:\\Users\\Dell\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+# Check all column names in the dataset
+colnames(data)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(plotly)
+
+# Create ggplot for Corn Yield
+p_corn <- ggplot(data, aes(x = `Multiple MSG Flag`, y = `Corn Yield (ton/acre)`)) +
+  geom_boxplot(fill = "blue") +
+  labs(title = "Corn Yield by Multiple MSG Flag", x = "Multiple MSG Flag", y = "Corn Yield")
+
+# Convert to plotly
+plotly_corn <- ggplotly(p_corn)
+
+# Display the plots
+plotly_corn
+
+```
+
+Box Plot Analysis for "Yes" Flag in Corn Yield Minimum Yield:
+
+The minimum yield recorded is 0, indicating that there were instances where no corn was produced.
+
+First Quartile (Q1): The first quartile is at 9.00 tons/acre, which means that 25% of the yields are below this value. This lower quartile suggests a significant number of plots produced yields less than 9 tons per acre.
+
+Median (Q2): The median yield is 10.50 tons/acre, indicating that half of the yields are below this value and half are above. This median is fairly low compared to the maximum, suggesting a skewed distribution with a clustering of yields around the lower mid-range.
+
+Third Quartile (Q3): The third quartile is at 18.48 tons/acre, showing that 75% of the yields are below this level. This wider spread between the median and Q3 indicates variability in the higher yield range.
+
+**Maximum Yield:** The maximum yield observed is 24.00 tons/acre, significantly lower than the maximum yields observed in the "No" condition, suggesting that while the "Yes" flag might include high-yield scenarios, its peak potential is less than that of the "No" flag scenarios.
+
+**Minimum Yield:** The minimum yield starts at 0, similar to the "Yes" category, indicating that there were also no-yield instances under the "No" condition.
+
+First Quartile (Q1): Again, it is close to zero which suggests a significant portion of the data also produced very low yields.
+
+**Median Yield:** The median is noticeably lower than in the "Yes" condition, at about 12.00 tons/acre. Third Quartile (Q3): Positioned around 13.68 tons/acre, which is lower than the third quartile in the "Yes" category, indicating less variability in the higher yield segment under the "No" condition. Maximum Yield: The maximum yield extends up to about 40.56 tons/acre, which is similar to the "Yes" condition, indicating the highest yields are comparable between the two groups. However, these very high yields are outliers, as shown by the points above the upper fence (31.50 tons/acre).
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Create ggplot for Hay Yield
+p_hay <- ggplot(data, aes(x = `Multiple MSG Flag`, y = `Hay Yield (ton/acre)`)) +
+  geom_boxplot(fill = "green") +
+  labs(title = "Hay Yield by Multiple MSG Flag", x = "Multiple MSG Flag", y = "Hay Yield")
+
+plotly_hay <- ggplotly(p_hay)
+plotly_hay
+```
+
+Box Plot Analysis for Hay Yield For "Yes": Minimum Yield: The minimum yield starts at 0, indicating that some plots did not produce any hay.
+
+First Quartile (Q1): The first quartile is around 0 as well, suggesting that at least 25% of the plots produced very little to no hay. Median Yield: The median yield is 1.63 tons/acre, indicating that half of the plots under the "Yes" condition produced this amount or less. This is a relatively low median, suggesting moderate production overall but lower than might be expected.
+
+Third Quartile (Q3): The third quartile at 3.35 tons/acre shows that 75% of the plots produced 3.35 tons/acre or less. This wider spread from the median to Q3 indicates variability in the higher production range.
+
+Maximum Yield: The maximum yield reported is 4.62 tons/acre, which is quite low compared to corn yield outliers. This suggests that even the highest-producing hay plots under the "Yes" flag aren't exceedingly productive.
+
+Box Plot Analysis for "No" Flag in Hay Yield Minimum Yield: The minimum yield starts at 0, similar to the "Yes" condition, indicating that some plots under this condition also did not produce any hay.
+
+First Quartile (Q1): Positioned at 0.96 tons/acre, this marks where 25% of the yields fall below. This value suggests a base level of production that is slightly higher than the absolute minimum, indicating a better performance in the lower yield quartile compared to the "Yes" condition. Median Yield: The median yield is 1.95 tons/acre, which is exactly the same as in the "Yes" condition. This indicates a similar central tendency in terms of yield across both soil group conditions.
+
+Third Quartile (Q3): The third quartile is 2.68 tons/acre, showing that 75% of the data fall below this yield. The range between the first and third quartile is narrower compared to the "Yes" condition, indicating less variability in the higher yield ranges. Upper Fence: The upper fence at 4.02 tons/acre sets the boundary for what is considered normal yield variation; yields beyond this are treated as outliers. Maximum Yield: The maximum observed yield is 8.04 tons/acre, which is a significant outlier and suggests that a few plots can produce substantially more than typical plots under the "No" condition.
+
+Linear Regression Models :
+
+![](images/clipboard-2519379234.png)
+
+**Model for Corn Yield:**
+
+Coefficients: The intercept was significant at 12.5918 tons/acre (p \< 2e-16), indicating the average yield when the flag is "Yes". The coefficient for "No" was -2.8169 (p \< 2e-16), indicating a significant reduction in yield when the flag is "No". Model Fit: The model explained only 1.019% of the variance in yield (R-squared = 0.01019), suggesting that other factors besides the MSG flag are more influential in determining corn yield.
+
+![](images/clipboard-4118704247.png)
+
+![](images/clipboard-182773790.png)
+
+**Model for Hay Yield:**
+
+**Coefficients:** The intercept for "Yes" was 2.31247 tons/acre (p \< 2e-16), with the "No" flag associated with a decrease in yield by 0.43985 tons/acre (p \< 9.6e-14).
+
+**Model Fit:** The R-squared value was 0.006494, indicating that the model explains a very small portion of the variance in hay yields.
+
+The presence of multiple mineral soil groups (Multiple MSG Flag) positively affects both corn and hay yields. Our analysis shows that fields with Multiple mineral soil groups tend to yield higher compared to fields without such diversity. Specifically, regression analysis revealed significant increases in yield for areas with multiple soil groups: corn yields decrease by about 2.817 tons per acre and hay yields by about 0.440 tons per acre in the absence of soil diversity.
+
+Both models show that the "Multiple MSG Flag" being "No" is associated with a decrease in yield for both corn and hay compared to when the flag is "Yes". However, the effect is stronger and more pronounced for corn. Both models explain a very small fraction of the variability in yields, which suggests that there are many other factors affecting yield that are not captured by this variable alone.
+
+## References:
+
+Dataset :
+
+For reference click this link to redirected to the dataset:
+
+<https://data.ny.gov/Energy-Environment/NYSERDA-2023-Soils-Data-for-use-in-the-Large-Scale/dayw-t2bj/about_data>
+
+Overview of the dataset: <https://data.ny.gov/api/views/dayw-t2bj/files/eda3c994-48d7-4f59-8ee4-5e8c7a022b83?download=true&filename=NYSERDA_Soils2023_Overview.pdf>
+
+Description for the columns: <https://data.ny.gov/api/views/dayw-t2bj/files/a9db1226-91d1-40f6-ae9c-ee4a34b20b67?download=true&filename=NYSERDA_Soils2023_DataDictionary.pdf>
+
+<https://www.mdpi.com/2073-4395/12/11/2613>
+
+<https://journalijpss.com/index.php/IJPSS/article/view/3685>

@@ -1,0 +1,105 @@
+---
+title: "jjjjjjj"
+author: "Revanth Karumajji"
+date: "2024-05-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+# Load your dataset
+data <- read.csv("C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+data <- data %>%
+  mutate(Texture_Group = case_when(
+    Texture %in% c("Silty Loam", "Silty Clay Loam", "Silty Loam, Non-Calcareous") ~ "STILLY",
+    Texture %in% c("Muck", "Peat", "Muck/Peat") ~ "MUCK",
+    Texture %in% c("Loamy Fine Sand", "Fine Sandy Loam", "Very Fine Sandy Loam", "Loamy Sand", "Fine Sand", "Loamy Very Fine Sand") ~ "SANDY",
+    Texture %in% c("Clay", "Silty Clay", "Clay Loam") ~ "CLAY",
+    Texture %in% c("Sandy Loam", "Sandy Clay Loam") ~ "LOAM",
+    Texture == "Flaggery" ~ "FLAGGERY",
+    TRUE ~ "OTHER"  # For any other values not specified
+  ))
+
+# Ensure that the Texture variable is correctly formatted as a factor
+data$Texture <- as.factor(data$Texture_Group)
+
+# Fit a linear regression model to see the effect of Soil Texture on Hay Yield
+model_texture_hay <- lm(Hay.Yield..ton.acre. ~ Texture_Group, data = data)
+
+# Summary of the model to check for significance and coefficients
+summary(model_texture_hay)
+
+
+p <- ggplot(data, aes(x = Texture_Group, y = Hay.Yield..ton.acre.)) +
+  geom_boxplot() +
+  labs(title = "Impact of Soil Texture on Hay Yield",
+       x = "Soil Texture",
+       y = "Hay Yield (ton/acre)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Convert ggplot to Plotly
+plotly_plot <- ggplotly(p)
+print(plotly_plot)
+
+```
+
+The plot you provided shows the impact of different soil textures on hay yield per acre. Here’s how you can interpret and potentially extend the analysis based on this plot:
+
+Interpretation:
+Variability in Yield: The boxplot indicates significant variability in hay yield across different soil textures. Some textures, like "Loamy Sand" and "Fine Sand," show a broader range of yields, indicating that other factors may influence the yield in addition to the texture.
+Median Yield Differences: Textures such as "Silty Loam" and "Loam" appear to have higher median yields compared to more coarse textures like "Sandy Loam" or "Fine Sandy Loam." This could be due to better water retention capabilities of finer-textured soils.
+Outliers: There are notable outliers in several categories, such as "Silty Loam" and "Loamy Sand." These outliers may represent specific conditions or errors in data that could significantly influence the average yield calculations.
+Further Analysis Suggestions:
+Statistical Tests: Conduct statistical tests (like ANOVA) to formally test if the differences in yields across soil textures are statistically significant.
+
+
+```{r}
+# Load the necessary library
+library(dplyr)
+
+# Assuming your data is already loaded into a DataFrame named data
+# Make sure to convert Texture to a factor if it isn't already
+data$Texture <- as.factor(data$Texture_Group)
+
+# Perform the ANOVA
+anova_result <- aov(Hay.Yield..ton.acre. ~ Texture_Group, data = data)
+
+# Display the summary of the ANOVA test
+summary(anova_result)
+```
+Here's a breakdown of the results:
+
+Degrees of Freedom (Df):
+Texture: 20 (reflecting the 21 different categories of soil texture, with 20 degrees of freedom for the comparisons).
+Residuals: 8492 (reflecting the leftover degrees of freedom after accounting for the factor levels).
+Sum of Squares:
+Sum Sq (Texture): 791 (the total variation attributable to differences between different soil textures).
+Sum Sq (Residuals): 11933 (the variation within the groups of the same texture, i.e., the error or residual variation).
+Mean Squares:
+Mean Sq (Texture): 39.57 (the average variation between groups; calculated as Sum Sq divided by Df for texture).
+Mean Sq (Residuals): 1.41 (the average variation within groups; calculated as Sum Sq divided by Df for residuals).
+F value: 28.16 (a measure of the ratio of the variance between the groups to the variance within the groups, which is a significant statistic in determining if the means of different groups are statistically different).
+Pr(>F): < 2e-16 (the p-value indicating the probability of observing such a large F statistic if the null hypothesis is true, i.e., all group means are the same. A value less than 0.05, here very close to zero, indicates strong evidence against the null hypothesis).
+Conclusion:
+Given the very low p-value (< 2e-16), you can reject the null hypothesis and conclude that there are statistically significant differences in hay yield among different soil textures. This suggests that soil texture significantly impacts hay yield. With such a result, further investigation into which specific textures contribute most to these differences might be warranted, possibly using post-hoc tests to compare individual group means pairwise.
+
+```{r}
+# Load necessary library
+library(tidyr)
+library(dplyr)
+
+# Perform Tukey's HSD test for pairwise comparisons
+tukey_results <- TukeyHSD(anova_result)
+
+tukey_results
+
+```
+

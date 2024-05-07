@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: docs
+website:
+  title: "Hello"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - Skills.qmd
+      - Projects.qmd
+      - midproject.qmd
+      - code.qmd
+      - dataset.qmd
+      - research3.qmd
+      - final project code.qmd
+
+format:
+  html:
+    theme: sketchy
+    css: styles.css
+    toc: true
+
+editor: visual
+

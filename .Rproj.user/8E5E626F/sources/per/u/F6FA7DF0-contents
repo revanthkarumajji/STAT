@@ -1,0 +1,98 @@
+---
+title: "research 1"
+author: "Revanth Karumajji"
+date: "2024-05-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+library(plotly)
+library(randomForest)
+library(rpart)
+library(ggplot2)
+# Load and prepare the data
+data <- read.csv("C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+data <- na.omit(data)  # Handling missing values
+
+# Exploratory Data Analysis
+summary(data)
+
+str(data)
+# Visualizing distribution of Rotation and other soil characteristics
+
+# Create the ggplot object
+p <- ggplot(data, aes(x = Rotation)) +
+  geom_histogram(bins = 30) +
+  ggtitle("Distribution of Rotation Periods")
+
+# Convert ggplot object to plotly
+plotly_plot <- ggplotly(p)
+
+# Print the interactive plot
+plotly_plot
+
+
+# Multiple Regression
+lm_model <- lm(Rotation ~ Drainage + Texture + Soil.Slope, data=data)
+summary(lm_model)
+
+# Random Forest Regression
+rf_model <- randomForest(Rotation ~ ., data=data)
+importance(rf_model)
+
+# Evaluate models and make decisions based on output
+```
+
+
+```{r}
+library(ggplot2)
+# Histogram of Rotation Period
+ggplot(data, aes(x = Rotation)) + geom_histogram(binwidth = 1, fill = "blue", color = "black") + labs(title = "Distribution of Rotation Periods")
+
+# Boxplot to see distribution of Soil Slope by Rotation
+ggplot(data, aes(x = as.factor(Rotation), y = Soil.Slope)) + geom_boxplot() + labs(title = "Soil Slope by Rotation Period")
+
+```
+
+```{r}
+# Load necessary libraries
+library(randomForest)
+library(dplyr)
+library(tidyr)
+
+# Prepare your data (assuming it's already loaded as 'data')
+data <- data %>%
+  mutate_at(vars(Drainage, Texture, Soil.Slope), factor) %>%
+  drop_na()
+
+# Build the Random Forest model
+set.seed(123)  # for reproducibility
+rf_model <- randomForest(Rotation ~ ., data = data, importance = TRUE)
+
+# Print the importance of each variable
+importance(rf_model)
+```
+```{r}
+# Sort and plot the importance
+var_importance <- importance(rf_model)
+var_importance <- var_importance[order(var_importance[, "IncNodePurity"], decreasing = TRUE),]
+barplot(var_importance[, "IncNodePurity"], main = "Variable Importance in Random Forest Model", las = 2)
+```
+
+
+```{r}
+# Install and load pdp package for partial dependence plots
+if (!requireNamespace("pdp", quietly = TRUE)) install.packages("pdp")
+library(pdp)
+
+# Partial dependence plot for the most important variable
+pdp_result <- partial(rf_model, pred.var = "Corn.Yield..ton.acre.")
+plot(pdp_result, main = "Partial Dependence Plot for Corn Yield")
+```
+
