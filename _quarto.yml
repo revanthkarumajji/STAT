@@ -11,8 +11,7 @@ website:
       - Projects.qmd
       - midproject.qmd
       - code.qmd
-      - dataset.qmd
-      - research3.qmd
+      - finalproj.qmd
       - final project code.qmd
 
 format:
