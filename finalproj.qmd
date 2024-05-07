@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-# Introduction 
+# Introduction
 
 In the landscape of renewable energy and environmental conservation, precise and accurate data are paramount. The New York State Energy Research and Development Authority (NYSERDA) presents the 2023 Soils Data, a vital resource tailored for stakeholders in the Large-Scale Renewables and NY-Sun Programs. Released on January 12, 2024, this dataset supports the Renewable Energy Standard (RES) Request for Proposal (RFP) processes, providing essential data to inform site selection and development while prioritizing the conservation of high-quality agricultural soils in New York State.
 
@@ -75,7 +75,7 @@ library(rpart)
 library(rpart.plot)
 
 # Load the dataset
-data <- read_csv("C:\\Users\\Dell\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+data <- read_csv("C:\\Users\\Vijay\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
 
 # Check the structure and summary of data
 str(data)
@@ -342,7 +342,7 @@ The Pearson correlation coefficient between the 'Drainage' and 'Flooding' column
 
 **Further Analysis:** Investigating how other variables interact with 'Drainage' and 'Flooding' could provide deeper insights. For instance, soil texture, slope, and capability class could be influencing how quickly water is absorbed or runs off, affecting flooding.
 
-![](images/clipboard-2132043786.png)
+![](images/clipboard-2355441824.png)
 
 These plots are key to understanding which predictors are most influential in modeling the outcome (in your case, flooding).
 
@@ -358,7 +358,7 @@ Investigating interaction effects between predictors like 'Drainage' and 'Textur
 
 We'll modify the linear regression model to include an interaction term between 'Drainage' and 'Texture'. This will allow us to see if the effect of one variable on flooding depends on the level of the other variable.
 
-![](images/clipboard-1946659323.png)
+![](images/clipboard-3081977755.png)
 
 **Interpretation of the Regression Output Coefficients:**
 
@@ -384,7 +384,7 @@ Residuals: The spread of residuals suggests that while the model fits well for m
 
 Random Forest inherently considers interactions among features, but we can explicitly engineer an interaction feature to see how it influences model performance.
 
-![](images/clipboard-3888396288.png)
+![](images/clipboard-1922876300.png)
 
 **Interpretation of the Random Forest Model Results:**
 
@@ -412,9 +412,9 @@ Drainage_Texture_Interaction: With the highest importance score of 131.4226, thi
 
 1.  Cross-Validation for Linear Regression and Random Forest
 
-    ![](images/clipboard-2856830190.png)
+    ![](images/clipboard-3248948865.png)
 
-    ![](images/clipboard-3603234270.png)
+    ![](images/clipboard-2219793880.png)
 
     The cross-validation results for both the Linear Regression and Random Forest models provide a clear comparison of their performance:
 
@@ -442,7 +442,7 @@ Drainage_Texture_Interaction: With the highest importance score of 131.4226, thi
 
 The diagnostic plots for your linear regression model provide valuable insights into how well the model meets the assumptions necessary for optimal performance. Here's an interpretation of each plot:
 
-![](images/clipboard-2318224925.png)
+![](images/clipboard-1957098048.png)
 
 1.  Residuals vs Fitted: This plot helps check for non-linearity and heteroscedasticity (unequal variance of residuals).
 
@@ -487,7 +487,7 @@ library(dplyr)  # For data manipulation
 library(ggplot2)  # For creating visualizations
 
 # dataset
-data = read_csv("C:\\Users\\Dell\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+data = read_csv("C:\\Users\\Vijay\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
 # Check all column names in the dataset
 colnames(data)
 ```
@@ -556,15 +556,15 @@ Third Quartile (Q3): The third quartile is 2.68 tons/acre, showing that 75% of t
 
 Linear Regression Models :
 
-![](images/clipboard-2519379234.png)
+![](images/clipboard-1403669508.png)
 
 **Model for Corn Yield:**
 
 Coefficients: The intercept was significant at 12.5918 tons/acre (p \< 2e-16), indicating the average yield when the flag is "Yes". The coefficient for "No" was -2.8169 (p \< 2e-16), indicating a significant reduction in yield when the flag is "No". Model Fit: The model explained only 1.019% of the variance in yield (R-squared = 0.01019), suggesting that other factors besides the MSG flag are more influential in determining corn yield.
 
-![](images/clipboard-4118704247.png)
+![](images/clipboard-3844458077.png)
 
-![](images/clipboard-182773790.png)
+![](images/clipboard-4255824214.png)
 
 **Model for Hay Yield:**
 
