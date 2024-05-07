@@ -1,23 +1,357 @@
 ---
 title: "Final project Code"
 ---
+Exploratory Data analysis of a Dataset:
 
 ```{r}
-# Load necessary libraries
-library(readr)  # For reading CSV files
-library(dplyr)  # For data manipulation
-library(ggplot2)  # For creating visualizations
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+library(readr)
+library(rpart)
+library(rpart.plot)
 
-# dataset
-data = read_csv("C:/Users/Vijay/Downloads/NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
-# Check all column names in the dataset
-colnames(data)
+# Load the dataset
+data <- read_csv("C:\\Users\\Vijay\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+
+# Check the structure and summary of data
+str(data)
+```
+Research Question 1. Which New York State counties are best suited for solar projects based on low agricultural yields of corn and hay and How do soil characteristics influence agricultural productivity in these counties, and what implications does this have for solar energy project siting?
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE),
+            Avg_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE))
+
+# View the resulting data frame
+print(county_avg_yield)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(ggplot2)
+library(plotly)
+library(dplyr)
+
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE))
+
+# Create a ggplot object for average corn yields by county
+p_corn <- ggplot(data = county_avg_yield, aes(x = reorder(County, -Avg_Corn_Yield), y = Avg_Corn_Yield, fill = Avg_Corn_Yield)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  # Remove legend
+  scale_fill_gradient(low = "yellow", high = "darkorange") +  # Use a gradient fill from yellow to dark orange
+  labs(title = "Average Corn Yield by County", x = "County", y = "Average Yield (ton/acre)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8),  # Rotate x-axis labels for better fit
+        axis.title = element_text(size = 12, face = "bold"))  # Bold and larger axis titles
+
+# Convert the ggplot object to a Plotly object
+plotly_corn <- ggplotly(p_corn)
+
+# Optionally, customize further with layout options in Plotly
+plotly_corn <- layout(plotly_corn,
+                   xaxis = list(title = "County"),
+                   yaxis = list(title = "Average Yield (ton/acre)"),
+                   title = "Average Corn Yield by County")
+
+# Print or render the plot
+plotly_corn
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Calculate average yield for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarize(Avg_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE))
+
+# Create a ggplot object for average hay yields by county
+p_hay <- ggplot(data = county_avg_yield, aes(x = reorder(County, -Avg_Hay_Yield), y = Avg_Hay_Yield, fill = Avg_Hay_Yield)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  # Remove legend
+  scale_fill_gradient(low = "lightgreen", high = "darkgreen") +  # Use a gradient fill from light green to dark green
+  labs(title = "Average Hay Yield by County", x = "County", y = "Average Yield (ton/acre)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8),  # Rotate x-axis labels for better fit
+        axis.title = element_text(size = 12, face = "bold"))  # Bold and larger axis titles
+
+# Convert the ggplot object to a Plotly object
+plotly_hay <- ggplotly(p_hay)
+
+# Optionally, customize further with layout options in Plotly
+plotly_hay <- layout(plotly_hay,
+                   xaxis = list(title = "County"),
+                   yaxis = list(title = "Average Yield (ton/acre)"),
+                   title = "Average Hay Yield by County")
+
+# Print or render the plot
+plotly_hay
 
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+# Calculate average yields for each county
+county_avg_yield <- data %>%
+  group_by(County) %>%
+  summarise(
+    Average_Corn_Yield = mean(`Corn Yield (ton/acre)`, na.rm = TRUE),
+    Average_Hay_Yield = mean(`Hay Yield (ton/acre)`, na.rm = TRUE),
+    Total_Yield = Average_Corn_Yield + Average_Hay_Yield
+  ) %>%
+  arrange(Total_Yield)  # Arrange by total average yield in ascending order
+
+# Create hover text
+county_avg_yield <- county_avg_yield %>%
+  mutate(Hover_Info = sprintf("County: %s\nCorn Yield: %.2f ton/acre\nHay Yield: %.2f ton/acre\nTotal Yield: %.2f ton/acre",
+                              County, Average_Corn_Yield, Average_Hay_Yield, Total_Yield))
+
+# Create the ggplot object with hover info
+p_stacked <- ggplot(data = county_avg_yield, aes(x = reorder(County, Total_Yield), text = Hover_Info)) +
+  geom_bar(aes(y = Average_Corn_Yield), stat = "identity", fill = "orange") +
+  geom_bar(aes(y = -Average_Hay_Yield), stat = "identity", fill = "lightgreen") +
+  labs(title = "Stacked Average Yields by County",
+       x = "County", y = "Average Yield (ton/acre)", fill = "Crop Type") +
+  scale_y_continuous(labels = abs) +
+  scale_fill_manual(values = c("orange", "lightgreen"), labels = c("Corn", "Hay")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+
+# Convert to Plotly and add custom hover info
+plotly_stacked <- ggplotly(p_stacked, tooltip = "text")
+
+plotly_stacked <- layout(plotly_stacked,
+                         xaxis = list(title = "County"),
+                         yaxis = list(title = "Yield (ton/acre)"),
+                         title = "Interactive: Stacked Average Yields by County")
+plotly_stacked
+
+
+```
+
+Interactive: Stacked Average Yields by County (Third Graph):
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load the necessary library
+library(dplyr)
+
+# Assuming 'data' is already loaded into your R environment
+# Filter data for Hamilton County
+hamilton_data <- data %>%
+  filter(County == "Hamilton")
+
+# View the first few rows of the Hamilton data to confirm filtering
+head(hamilton_data)
+
+# You might also want to check the structure of the filtered data
+str(hamilton_data)
+
+```
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(dplyr)
+
+# Convert categorical variables to numeric
+data$Soil_Temp_Regime <- as.numeric(as.factor(data$`Soil Temp. Regime`))
+data$Texture <- as.numeric(as.factor(data$Texture))
+
+# Calculate the correlation matrix for soil characteristics and yields
+correlation_analysis <- data %>%
+  select(`Corn Yield (ton/acre)`, `Hay Yield (ton/acre)`, `Default Mineral Soil Group`, Soil_Temp_Regime, Texture, `TDN (ton/acre)`, `Index (TDN)`) %>%
+  cor(use = "complete.obs")  # Handling missing data by using complete cases
+
+# Print the correlation matrix
+print(correlation_analysis)
+
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+library(plotly)
+library(reshape2)
+
+# Assuming 'correlation_analysis' is your correlation matrix from earlier
+cor_data <- as.data.frame(correlation_analysis)
+cor_data$Variable <- rownames(cor_data)  # Add a new column for the row names
+
+# Convert the wide format data frame to a long format
+cor_long <- melt(cor_data, id.vars = 'Variable')
+
+# Create the heatmap with Plotly
+p <- plot_ly(data = cor_long, x = ~variable, y = ~Variable, z = ~value, type = 'heatmap', colors = colorRamp(c("red", "yellow", "green")),
+             hoverinfo = 'text',
+             text = ~paste('Correlation: ', round(value, 2)),
+             colorbar = list(title = 'Correlation Coefficient')) %>%
+  layout(title = 'Correlation Matrix Heatmap',
+         xaxis = list(title = 'Variable', tickangle = 90, side = 'top'),  # Correctly set the tick angle here
+         yaxis = list(title = 'Variable', ticksuffix = '  '),
+         margin = list(l = 150, b = 150))  # Adjust margins if needed
+
+# Print the plot
+p
+
+```
+
+Research Question 2 : How does the moderate positive correlation between 'Drainage' and 'Flooding' in the dataset influence our understanding of soil characteristics and their relationship to flooding risk?
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary library
+library(dplyr)
+
+# Read the dataset
+data <- read.csv("C:\\Users\\Vijay\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+
+# Convert factors to numeric if necessary (assuming 'Flooding' is binary or categorical)
+data$Drainage <- as.numeric(as.factor(data$Drainage))
+data$Flooding <- as.numeric(as.factor(data$Flooding))
+
+# Handling NA values
+data <- na.omit(data)
+
+# Using cor.test to determine the correlation
+cor_test <- cor.test(data$Drainage, data$Flooding)
+print(cor_test)
+```
+
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary libraries
+library(randomForest)
+library(dplyr)
+colnames(data)
+# Handling NA values - assuming you're interested in predicting 'Flooding'
+data_clean <- na.omit(data[, c("Flooding", "Drainage", "Texture", "Soil.Slope", "Capability.Class..FM5.CAP.")])
+data_clean$Texture <- as.numeric(as.factor(data_clean$Texture))
+
+
+
+# Convert all categorical variables to factor type
+data_clean$Capability_Class <- as.factor(data_clean$"Capability.Class..FM5.CAP.")
+
+
+# Fit Random Forest model
+set.seed(123)  # for reproducibility
+rf_model <- randomForest(Flooding ~ ., data=data_clean, ntree=500, importance=TRUE)
+
+# Print model summary
+print(rf_model)
+
+# Plot importance of variables
+varImpPlot(rf_model)
+```
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary library
+library(stats)
+
+data$Texture <- as.numeric(as.factor(data$Texture))  # Convert categorical to numeric
+data$Drainage <- as.numeric(as.factor(data$Drainage))  # Convert categorical to numeric if needed
+
+# Fit Multiple Regression Model with Interaction Term
+model_interaction <- lm(Flooding ~ Drainage * Texture, data = data)
+
+# Summary of the model to see coefficients and significance
+summary(model_interaction)
+```
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary libraries
+library(randomForest)
+library(dplyr)
+
+# Prepare the data
+data <- mutate(data, Drainage_Texture_Interaction = Drainage * Texture)
+
+# Fit Random Forest Model including the engineered interaction feature
+set.seed(123)  # for reproducibility
+rf_model_interaction <- randomForest(Flooding ~ Drainage + Texture + Drainage_Texture_Interaction, data = data, ntree = 500)
+
+# Evaluate the model (assuming Flooding is continuous; adjust as necessary)
+print(rf_model_interaction)
+
+# Optionally, view the importance of the new interaction feature
+importance(rf_model_interaction)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary libraries
+library(caret)
+library(randomForest)
+
+data$Texture <- as.numeric(as.factor(data$Texture))
+data$Drainage <- as.numeric(as.factor(data$Drainage))
+
+# Define training control
+train_control <- trainControl(method = "cv", number = 10)  # 10-fold cross-validation
+
+# Fit Linear Regression Model using cross-validation
+lm_model_cv <- train(Flooding ~ Drainage + Texture + Drainage:Texture, data = data, method = "lm", trControl = train_control)
+
+# Fit Random Forest Model using cross-validation
+rf_model_cv <- train(Flooding ~ Drainage + Texture + Drainage:Texture, data = data, method = "rf", trControl = train_control, ntree = 500)
+
+# Summary of cross-validation results
+print(lm_model_cv)
+print(rf_model_cv)
+```
+Diagnostic Plots for Linear Regression
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Fit the linear model
+lm_model <- lm(Flooding ~ Drainage + Texture + Drainage:Texture, data = data)
+
+# Diagnostic plots
+par(mfrow = c(2, 2))
+plot(lm_model)
+```
+Research Question 3: How does the presence of multiple mineral soil group (Multiple MSG Flag) affect corn and hay yield across different counties?
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+# Load necessary libraries
+library(readr)  # For reading CSV files
+library(dplyr)  # For data manipulation
+library(ggplot2)  # For creating visualizations
+data <- read.csv("C:\\Users\\Vijay\\Downloads\\NYSERDA_2023_Soils_Data_for_use_in_the_Large-Scale_Renewables_and_NY-Sun_Programs.csv")
+
+# Check all column names in the dataset
+colnames(data)
+```
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 # Ensure 'Multiple MSG Flag' includes 'No' as a factor level correctly
-data$`Multiple MSG Flag` <- factor(data$`Multiple MSG Flag`, levels = c("Yes", "No"))
+data$`Multiple MSG Flag` <- factor(data$`Multiple.MSG.Flag`, levels = c("Yes", "No"))
 
 # Now safely replace NA values with "No"
 data$`Multiple MSG Flag`[is.na(data$`Multiple MSG Flag`)] <- "No"
@@ -25,14 +359,15 @@ data$`Multiple MSG Flag`[is.na(data$`Multiple MSG Flag`)] <- "No"
 # Verify changes to ensure "No" is now included and NAs are handled
 table(data$`Multiple MSG Flag`)
 
-
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 library(plotly)
 
 # Create ggplot for Corn Yield
-p_corn <- ggplot(data, aes(x = `Multiple MSG Flag`, y = `Corn Yield (ton/acre)`)) +
+p_corn <- ggplot(data, aes(x = `Multiple.MSG.Flag`, y = `Corn.Yield..ton.acre.`)) +
   geom_boxplot(fill = "blue") +
   labs(title = "Corn Yield by Multiple MSG Flag", x = "Multiple MSG Flag", y = "Corn Yield")
 
@@ -41,215 +376,19 @@ plotly_corn <- ggplotly(p_corn)
 
 # Display the plots
 plotly_corn
-
-
-
 ```
 
 ```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 # Create ggplot for Hay Yield
-p_hay <- ggplot(data, aes(x = `Multiple MSG Flag`, y = `Hay Yield (ton/acre)`)) +
+p_hay <- ggplot(data, aes(x = `Multiple.MSG.Flag`, y = `Hay.Yield..ton.acre.`)) +
   geom_boxplot(fill = "green") +
   labs(title = "Hay Yield by Multiple MSG Flag", x = "Multiple MSG Flag", y = "Hay Yield")
 
 plotly_hay <- ggplotly(p_hay)
 plotly_hay
-```
-
-```{r}
-# Linear regression for Corn Yield
-lm_corn <- lm(`Corn Yield (ton/acre)` ~ `Multiple MSG Flag`, data = data)
-summary(lm_corn)
-
 
 ```
 
-```{r}
 
-# Linear regression for Hay Yield
-lm_hay <- lm(`Hay Yield (ton/acre)` ~ `Multiple MSG Flag`, data = data)
-summary(lm_hay)
-```
-
-```{r}
-# Load necessary libraries
-library(caret)       # for data preparation and model evaluation
-library(randomForest) # for random forest modeling
-library(e1071)       # for SVM
-
-# Prepare data (assuming 'data' is already loaded and cleaned)
-# Ensure factor levels are correctly assigned
-data$`Multiple MSG Flag` <- factor(data$`Multiple MSG Flag`, levels = c("No", "Yes"))
-
-# Split data into training and testing sets
-set.seed(123)  # for reproducibility
-training_indices <- createDataPartition(data$`Corn Yield (ton/acre)`, p = 0.8, list = TRUE)
-train_data <- data[training_indices[[1]], ]
-test_data <- data[-training_indices[[1]], ]
-
-# Scale data for SVM
-preproc <- preProcess(train_data[, c("Corn Yield (ton/acre)", "Hay Yield (ton/acre)")], method = c("center", "scale"))
-train_scaled <- predict(preproc, train_data)
-test_scaled <- predict(preproc, test_data)
-
-```
-
-```{r}
-# Check for missing values in the relevant columns of test_data
-sum(is.na(test_data$`Corn Yield (ton/acre)`))
-sum(is.na(test_data$`Multiple MSG Flag`))
-
-# If there are missing values, decide on a strategy:
-test_data <- test_data[!is.na(test_data$`Corn Yield (ton/acre)`) & !is.na(test_data$`Multiple MSG Flag`), ]
-
-median_corn_yield <- median(train_data$`Corn Yield (ton/acre)`, na.rm = TRUE)
-test_data$`Corn Yield (ton/acre)`[is.na(test_data$`Corn Yield (ton/acre)`)] <- median_corn_yield
-
-```
-
-```{r}
-# Include Hay Yield in the cleaned test data
-clean_test_data <- test_data[, c("Multiple MSG Flag", "Corn Yield (ton/acre)", "Hay Yield (ton/acre)")]
-
-
-rf_model_corn <- randomForest(y = train_data$`Corn Yield (ton/acre)`, x = train_data[, "Multiple MSG Flag", drop = FALSE], ntree = 500)
-# Predict using the Random Forest model on the updated clean test data
-rf_predictions <- predict(rf_model_corn, newdata = clean_test_data)
-
-# Display the first few predictions to verify
-head(rf_predictions)
-
-```
-
-```{r}
-# Evaluate the predictions using appropriate metrics (if your model output is designed to compare directly against Corn Yield)
-rf_results <- postResample(rf_predictions, clean_test_data$`Corn Yield (ton/acre)`)
-print(rf_results)
-
-```
-
-```{r}
-# Assuming rf_results contains RMSE, R-squared, and MAE
-metrics_data <- data.frame(
-  Metric = c("RMSE", "R-squared", "MAE"),
-  Value = c(rf_results["RMSE"], rf_results["Rsquared"], rf_results["MAE"])
-)
-
-# Print the data frame to check
-print(metrics_data)
-
-```
-
-```{r}
-library(plotly)
-
-# Create a bar chart
-plot <- plot_ly(data = metrics_data, x = ~Metric, y = ~Value, type = 'bar', 
-                marker = list(color = 'rgb(158,202,225)', line = list(color = 'rgb(8,48,107)', width = 1.5)))
-plot <- layout(plot, title = "Model Performance Metrics",
-                yaxis = list(title = "Value"),
-                xaxis = list(title = "Metric"))
-
-# Render the plot
-plot
-
-```
-
-```{r}
-# Gauge chart for R-squared
-gauge_plot <- plot_ly(
-  domain = list(x = c(0, 1), y = c(0, 1)),
-  value = rf_results["Rsquared"],
-  title = list(text = "R-squared"),
-  type = "indicator",
-  mode = "gauge+number",
-  gauge = list(
-    axis = list(range = c(0, 1)),
-    bar = list(color = "darkblue"),
-    steps = list(
-      list(range = c(0, 0.5), color = "red"),
-      list(range = c(0.5, 0.75), color = "yellow"),
-      list(range = c(0.75, 1), color = "green")
-    )
-  )
-)
-
-# Render the gauge chart
-gauge_plot
-
-```
-
-```{r}
-# Train the Random Forest model for Hay Yield
-rf_model_hay <- randomForest(y = train_data$`Hay Yield (ton/acre)`, x = train_data[, "Multiple MSG Flag", drop = FALSE], ntree = 500)
-
-# Check the model summary to see the details
-print(summary(rf_model_hay))
-
-```
-
-```{r}
-# Predict Hay Yield using the Random Forest model
-hay_predictions <- predict(rf_model_hay, newdata = clean_test_data)
-
-# Display the first few predictions to verify
-head(hay_predictions)
-
-```
-
-```{r}
-# Evaluate the model performance for Hay Yield predictions
-hay_results <- postResample(hay_predictions, clean_test_data$`Hay Yield (ton/acre)`)
-
-# Print the results to see the performance metrics
-print(hay_results)
-
-```
-
-```{r}
-# Assuming rf_results contains RMSE, R-squared, and MAE
-metrics_datas <- data.frame(
-  Metric = c("RMSE", "R-squared", "MAE"),
-  Value = c(hay_results["RMSE"], hay_results["Rsquared"], hay_results["MAE"])
-)
-
-# Print the data frame to check
-print(metrics_data)
-```
-
-```{r}
-library(plotly)
-
-# Create a bar chart
-plot <- plot_ly(data = metrics_datas, x = ~Metric, y = ~Value, type = 'bar', 
-                marker = list(color = 'rgb(158,202,225)', line = list(color = 'rgb(8,48,107)', width = 1.5)))
-plot <- layout(plot, title = "Model Performance Metrics",
-                yaxis = list(title = "Value"),
-                xaxis = list(title = "Metric"))
-
-# Render the plot
-plot
-```
-
-```{r}
-# Gauge chart for R-squared
-gauge_plot <- plot_ly(
-  domain = list(x = c(0, 1), y = c(0, 1)),
-  value = hay_results["Rsquared"],
-  title = list(text = "R-squared"),
-  type = "indicator",
-  mode = "gauge+number",
-  gauge = list(
-    axis = list(range = c(0, 1)),
-    bar = list(color = "darkblue"),
-    steps = list(
-      list(range = c(0, 0.5), color = "red"),
-      list(range = c(0.5, 0.75), color = "yellow"),
-      list(range = c(0.75, 1), color = "green")
-    )
-  )
-)
-
-# Render the gauge chart
-gauge_plot
-```
